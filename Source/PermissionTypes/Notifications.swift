@@ -35,19 +35,19 @@ internal extension Permission {
     func requestNotifications(_ callback: Callback) {
         guard case .notifications(let settings) = type else { fatalError() }
         
-        NotificationCenter.default.addObserver(self, selector: #selector(requestingNotifications), name: UIApplication.willResignActiveNotification)
+        NotificationCenter.default.addObserver(self, selector: #selector(requestingNotifications), name: NSNotification.Name.UIApplicationWillResignActive)
         
         UIApplication.shared.registerUserNotificationSettings(settings)
     }
     
     @objc func requestingNotifications() {
-        NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification)
-        NotificationCenter.default.addObserver(self, selector: #selector(finishedRequestingNotifications), name: UIApplication.didBecomeActiveNotification)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationWillResignActive)
+        NotificationCenter.default.addObserver(self, selector: #selector(finishedRequestingNotifications), name: NSNotification.Name.UIApplicationDidBecomeActive)
     }
     
     @objc func finishedRequestingNotifications() {
-        NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification)
-        NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationWillResignActive)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationDidBecomeActive)
         
         UserDefaults.standard.requestedNotifications = true
         
