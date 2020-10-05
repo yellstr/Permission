@@ -49,8 +49,14 @@ internal extension Permission {
             return
         }
 
-        PHPhotoLibrary.requestAuthorization { _ in
-            callback(self.statusPhotos)
+        if #available(iOS 14, *) {
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { _ in
+                callback(self.statusPhotos)
+            }
+        } else {
+            PHPhotoLibrary.requestAuthorization { _ in
+                callback(self.statusPhotos)
+            }
         }
     }
 }
