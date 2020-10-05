@@ -27,8 +27,13 @@ import Photos
 
 internal extension Permission {
     var statusPhotos: PermissionStatus {
-        let status = PHPhotoLibrary.authorizationStatus()
-        
+        let status: PHAuthorizationStatus
+        if #available(iOS 14, *) {
+            status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        } else {
+            status = PHPhotoLibrary.authorizationStatus()
+        }
+
         switch status {
         case .authorized:          return .authorized
         case .denied, .restricted: return .denied
