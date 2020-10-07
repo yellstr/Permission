@@ -1,7 +1,7 @@
 //
 // Location.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #if PERMISSION_LOCATION
 import CoreLocation
 
-internal let LocationManager = CLLocationManager()
+let LocationManager = CLLocationManager()
 
 private var requestedLocation = false
 private var triggerCallbacks  = false
@@ -45,21 +45,16 @@ extension Permission: CLLocationManagerDelegate {
     }
 }
 
-
 extension CLLocationManager {
     func request(_ permission: Permission) {
         delegate = permission
-        
+
         requestedLocation = true
-        
-        if case .locationAlways = permission.type {
-            requestAlwaysAuthorization()
-            return
-        }
-        
-        if case .locationWhenInUse = permission.type {
-            requestWhenInUseAuthorization()
-            return
+
+        switch permission.type {
+        case .locationAlways: requestAlwaysAuthorization()
+        case .locationWhenInUse: requestWhenInUseAuthorization()
+        default: break
         }
     }
 }

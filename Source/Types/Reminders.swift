@@ -1,7 +1,7 @@
 //
 // Reminders.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +25,20 @@
 #if PERMISSION_REMINDERS
 import EventKit
 
-internal extension Permission {
+extension Permission {
     var statusReminders: PermissionStatus {
         let status = EKEventStore.authorizationStatus(for: .reminder)
-        
+
         switch status {
         case .authorized:          return .authorized
         case .restricted, .denied: return .denied
         case .notDetermined:       return .notDetermined
-        default: return .notDetermined
+        @unknown default:          return .notDetermined
         }
     }
-    
+
     func requestReminders(_ callback: @escaping Callback) {
-        EKEventStore().requestAccess(to: .reminder) { _,_ in
+        EKEventStore().requestAccess(to: .reminder) { _, _ in
             callback(self.statusReminders)
         }
     }

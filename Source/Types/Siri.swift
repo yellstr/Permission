@@ -1,7 +1,7 @@
 //
-// Contacts.swift
+// Siri.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2017 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,28 +22,33 @@
 // SOFTWARE.
 //
 
-#if PERMISSION_CONTACTS
-import Contacts
+#if PERMISSION_SIRI
+import Intents
 
-internal extension Permission {
-    var statusContacts: PermissionStatus {
-        guard #available(iOS 9.0, *) else { fatalError() }
-        
-        let status = CNContactStore.authorizationStatus(for: .contacts)
-            
+extension Permission {
+    var statusSiri: PermissionStatus {
+        guard #available(iOS 10.0, *) else { fatalError() }
+
+        let status = INPreferences.siriAuthorizationStatus()
+
         switch status {
         case .authorized:          return .authorized
         case .restricted, .denied: return .denied
         case .notDetermined:       return .notDetermined
-        default: return .notDetermined
+        @unknown default:          return .notDetermined
         }
     }
-    
-    func requestContacts(_ callback: @escaping Callback) {
-        guard #available(iOS 9.0, *) else { fatalError() }
-        
-        CNContactStore().requestAccess(for: .contacts) { _, _ in
-            callback(self.statusContacts)
+
+    func requestSiri(_ callback: @escaping Callback) {
+        guard #available(iOS 10.0, *) else { fatalError() }
+
+        guard let _ = Bundle.main.object(forInfoDictionaryKey: .siriUsageDescription) else {
+            print("WARNING: \(String.siriUsageDescription) not found in Info.plist")
+            return
+        }
+
+        INPreferences.requestSiriAuthorization { _ in
+            callback(self.statusSiri)
         }
     }
 }

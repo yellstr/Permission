@@ -1,7 +1,7 @@
 //
 // Bluetooth.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 #if PERMISSION_BLUETOOTH
 import CoreBluetooth
 
-internal let BluetoothManager = CBPeripheralManager(
+let BluetoothManager = CBPeripheralManager(
     delegate: Permission.bluetooth,
     queue: nil,
     options: [CBPeripheralManagerOptionShowPowerAlertKey: false]
@@ -34,49 +34,48 @@ internal let BluetoothManager = CBPeripheralManager(
 extension Permission {
     var statusBluetooth: PermissionStatus {
         switch CBPeripheralManager.authorizationStatus() {
-        case .restricted: return .disabled
-        case .denied: return .denied
+        case .restricted:                 return .disabled
+        case .denied:                     return .denied
         case .notDetermined, .authorized: break
-        default: return .notDetermined
+        @unknown default:                 return .notDetermined
         }
-        
-        guard UserDefaults.standard.stateBluetoothManagerDetermined else { return .notDetermined }
-        
+
+        guard Defaults.stateBluetoothManagerDetermined else { return .notDetermined }
+
         switch BluetoothManager.state {
         case .unsupported, .poweredOff: return .disabled
         case .unauthorized: return .denied
         case .poweredOn: return .authorized
         case .resetting, .unknown:
-            return UserDefaults.standard.statusBluetooth ?? .notDetermined
-        @unknown default:
-            fatalError()
+            return Defaults.statusBluetooth ?? .notDetermined
+        @unknown default: return .notDetermined
         }
     }
-    
+
     func requestBluetooth(_ callback: Callback?) {
-        UserDefaults.standard.requestedBluetooth = true
-        
+        Defaults.requestedBluetooth = true
+
         BluetoothManager.request(self)
     }
 }
 
 extension Permission: CBPeripheralManagerDelegate {
     public func peripheralManagerDidUpdateState(_ peripheral: CBPeripheralManager) {
-        UserDefaults.standard.stateBluetoothManagerDetermined = true
-        UserDefaults.standard.statusBluetooth = statusBluetooth
-        
-        guard UserDefaults.standard.requestedBluetooth else { return }
-        
+        Defaults.stateBluetoothManagerDetermined = true
+        Defaults.statusBluetooth = statusBluetooth
+
+        guard Defaults.requestedBluetooth else { return }
+
         callback?(statusBluetooth)
-        
-        UserDefaults.standard.requestedBluetooth = false
+
+        Defaults.requestedBluetooth = false
     }
 }
 
 extension CBPeripheralManager {
     func request(_ permission: Permission) {
         guard case .poweredOn = state else { return }
-        
+
         startAdvertising(nil)
         stopAdvertising()
     }

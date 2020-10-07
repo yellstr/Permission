@@ -1,7 +1,7 @@
 //
 // LocationAlways.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,32 +25,32 @@
 #if PERMISSION_LOCATION
 import CoreLocation
 
-internal extension Permission {
+extension Permission {
     var statusLocationAlways: PermissionStatus {
         guard CLLocationManager.locationServicesEnabled() else { return .disabled }
-        
+
         let status = CLLocationManager.authorizationStatus()
-        
+
         switch status {
         case .authorizedAlways: return .authorized
         case .authorizedWhenInUse:
-            return UserDefaults.standard.requestedLocationAlwaysWithWhenInUse ? .denied : .notDetermined
+            return Defaults.requestedLocationAlwaysWithWhenInUse ? .denied : .notDetermined
         case .notDetermined: return .notDetermined
         case .restricted, .denied: return .denied
-        default: return .notDetermined
+        @unknown default: return .notDetermined
         }
     }
-    
+
     func requestLocationAlways(_ callback: Callback) {
         guard let _ = Foundation.Bundle.main.object(forInfoDictionaryKey: .locationAlwaysUsageDescription) else {
             print("WARNING: \(String.locationAlwaysUsageDescription) not found in Info.plist")
             return
         }
-        
+
         if CLLocationManager.authorizationStatus() == .authorizedWhenInUse {
-            UserDefaults.standard.requestedLocationAlwaysWithWhenInUse = true
+            Defaults.requestedLocationAlwaysWithWhenInUse = true
         }
-        
+
         LocationManager.request(self)
     }
 }

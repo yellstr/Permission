@@ -1,7 +1,7 @@
 //
-// SpeechRecognizer.swift
+// Photos.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,38 +22,41 @@
 // SOFTWARE.
 //
 
-#if PERMISSION_SPEECH_RECOGNIZER
-import Speech
+#if PERMISSION_PHOTOS
+import Photos
 
-internal extension Permission {
-    var statusSpeechRecognizer: PermissionStatus {
-        guard #available(iOS 10.0, *) else { fatalError() }
-        
-        let status = SFSpeechRecognizer.authorizationStatus()
-        
+extension Permission {
+    var statusPhotos: PermissionStatus {
+        let status: PHAuthorizationStatus
+        if #available(iOS 14, *) {
+            status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        } else {
+            status = PHPhotoLibrary.authorizationStatus()
+        }
+
         switch status {
         case .authorized:          return .authorized
-        case .restricted, .denied: return .denied
+        case .denied, .restricted: return .denied
         case .notDetermined:       return .notDetermined
-        default: return .notDetermined
+        case .limited:             return .limited
+        @unknown default:          return .notDetermined
         }
     }
-    
-    func requestSpeechRecognizer(_ callback: @escaping Callback) {
-        guard #available(iOS 10.0, *) else { fatalError() }
-        
-        guard let _ = Bundle.main.object(forInfoDictionaryKey: .microphoneUsageDescription) else {
-            print("WARNING: \(String.microphoneUsageDescription) not found in Info.plist")
+
+    func requestPhotos(_ callback: @escaping Callback) {
+        guard let _ = Bundle.main.object(forInfoDictionaryKey: .photoLibraryUsageDescription) else {
+            print("WARNING: \(String.photoLibraryUsageDescription) not found in Info.plist")
             return
         }
-        
-        guard let _ = Bundle.main.object(forInfoDictionaryKey: .speechRecognitionUsageDescription) else {
-            print("WARNING: \(String.speechRecognitionUsageDescription) not found in Info.plist")
-            return
-        }
-        
-        SFSpeechRecognizer.requestAuthorization { _ in
-            callback(self.statusSpeechRecognizer)
+
+        if #available(iOS 14, *) {
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { _ in
+                callback(self.statusPhotos)
+            }
+        } else {
+            PHPhotoLibrary.requestAuthorization { _ in
+                callback(self.statusPhotos)
+            }
         }
     }
 }

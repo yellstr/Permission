@@ -1,7 +1,7 @@
 //
-// MediaLibrary.swift
+// Events.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,34 +22,24 @@
 // SOFTWARE.
 //
 
-#if PERMISSION_MEDIA_LIBRARY
-import MediaPlayer
+#if PERMISSION_EVENTS
+import EventKit
 
-internal extension Permission {
-    var statusMediaLibrary: PermissionStatus {
-        guard #available(iOS 9.3, *) else { fatalError() }
-        
-        let status = MPMediaLibrary.authorizationStatus()
-        
+extension Permission {
+    var statusEvents: PermissionStatus {
+        let status = EKEventStore.authorizationStatus(for: .event)
+
         switch status {
         case .authorized:          return .authorized
         case .restricted, .denied: return .denied
         case .notDetermined:       return .notDetermined
-        @unknown default:
-            fatalError()
+        @unknown default:          return .notDetermined
         }
     }
-    
-    func requestMediaLibrary(_ callback: @escaping Callback) {
-        guard #available(iOS 9.3, *) else { fatalError() }
-        
-        guard let _ = Bundle.main.object(forInfoDictionaryKey: .mediaLibraryUsageDescription) else {
-            print("WARNING: \(String.mediaLibraryUsageDescription) not found in Info.plist")
-            return
-        }
 
-        MPMediaLibrary.requestAuthorization { _ in
-            callback(self.statusMediaLibrary)
+    func requestEvents(_ callback: @escaping Callback) {
+        EKEventStore().requestAccess(to: .event) { _, _ in
+            callback(self.statusEvents)
         }
     }
 }

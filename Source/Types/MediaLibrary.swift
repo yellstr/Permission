@@ -1,7 +1,7 @@
 //
-// Siri.swift
+// MediaLibrary.swift
 //
-// Copyright (c) 2015-2017 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,29 +22,34 @@
 // SOFTWARE.
 //
 
-#if PERMISSION_SIRI
-import Intents
-    
-internal extension Permission {
-    var statusSiri: PermissionStatus {
-        guard #available(iOS 10.0, *) else { fatalError() }
-        let status = INPreferences.siriAuthorizationStatus()
+#if PERMISSION_MEDIA_LIBRARY
+import MediaPlayer
+
+extension Permission {
+    var statusMediaLibrary: PermissionStatus {
+        guard #available(iOS 9.3, *) else { fatalError() }
+
+        let status = MPMediaLibrary.authorizationStatus()
+
         switch status {
         case .authorized:          return .authorized
         case .restricted, .denied: return .denied
         case .notDetermined:       return .notDetermined
-        default: return .notDetermined
+        @unknown default:          return .notDetermined
         }
     }
-    func requestSiri(_ callback: @escaping Callback) {
-        guard #available(iOS 10.0, *) else { fatalError() }
-        guard let _ = Bundle.main.object(forInfoDictionaryKey: .siriUsageDescription) else {
-            print("WARNING: \(String.siriUsageDescription) not found in Info.plist")
+
+    func requestMediaLibrary(_ callback: @escaping Callback) {
+        guard #available(iOS 9.3, *) else { fatalError() }
+
+        guard let _ = Bundle.main.object(forInfoDictionaryKey: .mediaLibraryUsageDescription) else {
+            print("WARNING: \(String.mediaLibraryUsageDescription) not found in Info.plist")
             return
         }
-        INPreferences.requestSiriAuthorization({ (status) in
-            callback(self.statusSiri)
-        })
+
+        MPMediaLibrary.requestAuthorization { _ in
+            callback(self.statusMediaLibrary)
+        }
     }
 }
 #endif

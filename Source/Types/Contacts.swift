@@ -1,7 +1,7 @@
 //
-// Microphone.swift
+// Contacts.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,23 +22,28 @@
 // SOFTWARE.
 //
 
-#if PERMISSION_MICROPHONE
-import AVFoundation
+#if PERMISSION_CONTACTS
+import Contacts
 
-internal extension Permission {
-    var statusMicrophone: PermissionStatus {
-        let status = AVAudioSession.sharedInstance().recordPermission()
-        
+extension Permission {
+    var statusContacts: PermissionStatus {
+        guard #available(iOS 9.0, *) else { fatalError() }
+
+        let status = CNContactStore.authorizationStatus(for: .contacts)
+
         switch status {
-        case AVAudioSession.RecordPermission.denied:  return .denied
-        case AVAudioSession.RecordPermission.granted: return .authorized
-        default:                                     return .notDetermined
+        case .authorized:          return .authorized
+        case .restricted, .denied: return .denied
+        case .notDetermined:       return .notDetermined
+        @unknown default:          return .notDetermined
         }
     }
-    
-    func requestMicrophone(_ callback: @escaping Callback) {
-        AVAudioSession.sharedInstance().requestRecordPermission { _ in
-            callback(self.statusMicrophone)
+
+    func requestContacts(_ callback: @escaping Callback) {
+        guard #available(iOS 9.0, *) else { fatalError() }
+
+        CNContactStore().requestAccess(for: .contacts) { _, _ in
+            callback(self.statusContacts)
         }
     }
 }

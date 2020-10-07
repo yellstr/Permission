@@ -1,7 +1,7 @@
 //
-// LocationWhenInUse.swift
+// Camera.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,30 +22,30 @@
 // SOFTWARE.
 //
 
-#if PERMISSION_LOCATION
-import CoreLocation
+#if PERMISSION_CAMERA
+import AVFoundation
 
-internal extension Permission {
-    var statusLocationWhenInUse: PermissionStatus {
-        guard CLLocationManager.locationServicesEnabled() else { return .disabled }
-        
-        let status = CLLocationManager.authorizationStatus()
-        
+extension Permission {
+    var statusCamera: PermissionStatus {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+
         switch status {
-        case .authorizedWhenInUse, .authorizedAlways: return .authorized
-        case .restricted, .denied:                    return .denied
-        case .notDetermined:                          return .notDetermined
-        default: return .notDetermined
+        case .authorized:          return .authorized
+        case .restricted, .denied: return .denied
+        case .notDetermined:       return .notDetermined
+        @unknown default:          return .notDetermined
         }
     }
-    
-    func requestLocationWhenInUse(_ callback: Callback) {
-        guard let _ = Foundation.Bundle.main.object(forInfoDictionaryKey: .locationWhenInUseUsageDescription) else {
-            print("WARNING: \(String.locationWhenInUseUsageDescription) not found in Info.plist")
+
+    func requestCamera(_ callback: @escaping Callback) {
+        guard let _ = Bundle.main.object(forInfoDictionaryKey: .cameraUsageDescription) else {
+            print("WARNING: \(String.cameraUsageDescription) not found in Info.plist")
             return
         }
-        
-        LocationManager.request(self)
+
+        AVCaptureDevice.requestAccess(for: .video) { _ in
+            callback(self.statusCamera)
+        }
     }
 }
 #endif

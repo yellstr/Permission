@@ -1,7 +1,7 @@
 //
 // Motion.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,55 +29,54 @@ private let MotionManager = CMMotionActivityManager()
 
 extension Permission {
     var statusMotion: PermissionStatus {
-        if UserDefaults.standard.requestedMotion {
+        if Defaults.requestedMotion {
             return synchronousStatusMotion
         }
-        
+
         return .notDetermined
     }
-    
+
     func requestMotion(_ callback: Callback?) {
-        UserDefaults.standard.requestedMotion = true
-        
+        Defaults.requestedMotion = true
+
         let now = Date()
-        
-        MotionManager.queryActivityStarting(from: now, to: now, to: OperationQueue.main) { activities, error in
+
+        MotionManager.queryActivityStarting(from: now, to: now, to: .main) { _, error in
             let status: PermissionStatus
-            
-            if  let error = error , error._code == Int(CMErrorMotionActivityNotAuthorized.rawValue) {
+
+            if  let error = error, error._code == Int(CMErrorMotionActivityNotAuthorized.rawValue) {
                 status = .denied
             } else {
                 status = .authorized
             }
-            
+
             MotionManager.stopActivityUpdates()
-            
+
             callback?(status)
         }
     }
-    
-    fileprivate var synchronousStatusMotion: PermissionStatus {
+
+    private var synchronousStatusMotion: PermissionStatus {
         let semaphore = DispatchSemaphore(value: 0)
-        
+
         var status: PermissionStatus = .notDetermined
-        
+
         let now = Date()
-        
-        MotionManager.queryActivityStarting(from: now, to: now, to: OperationQueue(.background)) { activities, error in
-            if  let error = error , error._code == Int(CMErrorMotionActivityNotAuthorized.rawValue) {
+
+        MotionManager.queryActivityStarting(from: now, to: now, to: OperationQueue(.background)) { _, error in
+            if  let error = error, error._code == Int(CMErrorMotionActivityNotAuthorized.rawValue) {
                 status = .denied
             } else {
                 status = .authorized
             }
-            
+
             MotionManager.stopActivityUpdates()
-            
+
             semaphore.signal()
         }
-        
-        
-        _ = semaphore.wait(timeout: DispatchTime.distantFuture)
-        
+
+        _ = semaphore.wait(timeout: .distantFuture)
+
         return status
     }
 }

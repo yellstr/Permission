@@ -1,7 +1,7 @@
 //
-// Camera.swift
+// Microphone.swift
 //
-// Copyright (c) 2015-2016 Damien (http://delba.io)
+// Copyright (c) 2015-2019 Damien (http://delba.io)
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,29 +22,23 @@
 // SOFTWARE.
 //
 
-#if PERMISSION_CAMERA
+#if PERMISSION_MICROPHONE
 import AVFoundation
 
-internal extension Permission {
-    var statusCamera: PermissionStatus {
-        let status = AVCaptureDevice.authorizationStatus(for: AVMediaType.video)
-        
+extension Permission {
+    var statusMicrophone: PermissionStatus {
+        let status = AVAudioSession.sharedInstance().recordPermission
+
         switch status {
-        case .authorized:          return .authorized
-        case .restricted, .denied: return .denied
-        case .notDetermined:       return .notDetermined
-        default: return .notDetermined
+        case .denied:  return .denied
+        case .granted: return .authorized
+        default:       return .notDetermined
         }
     }
-    
-    func requestCamera(_ callback: @escaping Callback) {
-        guard let _ = Bundle.main.object(forInfoDictionaryKey: .cameraUsageDescription) else {
-            print("WARNING: \(String.cameraUsageDescription) not found in Info.plist")
-            return
-        }
-        
-        AVCaptureDevice.requestAccess(for: AVMediaType.video) { _ in
-            callback(self.statusCamera)
+
+    func requestMicrophone(_ callback: @escaping Callback) {
+        AVAudioSession.sharedInstance().requestRecordPermission { _ in
+            callback(self.statusMicrophone)
         }
     }
 }
